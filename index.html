@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRT 변환기</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        textarea { width: 100%; height: 150px; }
+        input, button { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>SRT 변환기</h1>
+    <textarea id="textInput" placeholder="여기에 텍스트를 입력하세요."></textarea>
+    <br>
+    <label for="durationInput">자막 길이 (초):</label>
+    <input type="number" id="durationInput" value="2" min="1">
+    <br>
+    <button onclick="generateSRT()">SRT 변환</button>
+
+    <script>
+        function generateSRT() {
+            const text = document.getElementById('textInput').value.trim();
+            const duration = parseInt(document.getElementById('durationInput').value);
+            if (!text) return;
+
+            const sentences = text.split('.').map(s => s.trim()).filter(s => s);
+            let srtContent = '';
+            let startTime = 0;
+
+            sentences.forEach((sentence, index) => {
+                const endTime = startTime + duration;
+
+                srtContent += `${index + 1}\n`;
+                srtContent += `${formatTime(startTime)} --> ${formatTime(endTime)}\n`;
+                srtContent += `${sentence}.\n\n`;
+
+                startTime = endTime;
+            });
+
+            downloadSRT(srtContent);
+        }
+
+        function formatTime(seconds) {
+            const hrs = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')},000`;
+        }
+
+        function downloadSRT(content) {
+            const blob = new Blob([content], { type: 'text/srt' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'output.srt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>
